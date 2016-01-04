@@ -3082,50 +3082,50 @@ session_close_single_x11(int id, void *arg)
 {
 	Session *s;
 	u_int i;
-  #ifdef WIN32_FIXME
-  
-  /*
-   * Send exit signal to child 'cmd.exe' process.
-   */
-  
-    if (s -> pid != NULL)
-    {
-      debug("Sending exit signal to child process [pid = %u]...", s -> pid);
-
-      if (!GenerateConsoleCtrlEvent(CTRL_BREAK_EVENT, s -> processId))
-      {
-        debug("ERROR. Cannot send signal to process.");
-      }  
-  
-      /*
-       * Try wait 100 ms until child finished.
-       */
-
-      if (WaitForSingleObject(s -> pid, 100) == WAIT_TIMEOUT)
-      {
-        /* 
-         * If still not closed, kill 'cmd.exe' process.
-         */
-    
-        if (TerminateProcess(s -> pid, 1) == TRUE)
-        {
-          debug("Process %u terminated.", s -> pid);
-        }
-        else
-        {
-          debug("ERROR. Cannot terminate %u process.", s -> pid);
-        } 
-      }
-    
-      CloseHandle(s -> pid);
-    }
-  
-  #endif
 
 	debug3("session_close_single_x11: channel %d", id);
 	channel_cancel_cleanup(id);
 	if ((s = session_by_x11_channel(id)) == NULL)
-		fatal("session_close_single_x11: no x11 channel %d", id);
+		return fatal("session_close_single_x11: no x11 channel %d", id);
+#ifdef WIN32_FIXME
+
+	/*
+	* Send exit signal to child 'cmd.exe' process.
+	*/
+
+	if (s->pid != NULL)
+	{
+		debug("Sending exit signal to child process [pid = %u]...", s->pid);
+
+		if (!GenerateConsoleCtrlEvent(CTRL_BREAK_EVENT, s->processId))
+		{
+			debug("ERROR. Cannot send signal to process.");
+		}
+
+		/*
+		* Try wait 100 ms until child finished.
+		*/
+
+		if (WaitForSingleObject(s->pid, 100) == WAIT_TIMEOUT)
+		{
+			/*
+			* If still not closed, kill 'cmd.exe' process.
+			*/
+
+			if (TerminateProcess(s->pid, 1) == TRUE)
+			{
+				debug("Process %u terminated.", s->pid);
+			}
+			else
+			{
+				debug("ERROR. Cannot terminate %u process.", s->pid);
+			}
+		}
+
+		CloseHandle(s->pid);
+	}
+
+#endif
 	for (i = 0; s->x11_chanids[i] != -1; i++) {
 		debug("session_close_single_x11: session %d: "
 		    "closing channel %d", s->self, s->x11_chanids[i]);
